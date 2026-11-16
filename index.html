@@ -1,0 +1,450 @@
+<!DOCTYPE html>
+<html lang="vi"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Thí nghiệm 3D: Phản ứng của nhóm amine (methylamine)</title>
+<style>
+:root{--bg:#0d1520;--p:#13202f;--p2:#1a2b40;--ln:#27405c;--tx:#e8eef6;--mu:#92a6bd;--ac:#35c2a1;--a2:#f0a04b;--bd:#ef6a6a;--ok:#4cd08a;--lw:246px;--rw:330px}
+*{box-sizing:border-box}html,body{height:100%;margin:0;background:var(--bg);color:var(--tx);font:14px "Segoe UI",Roboto,Arial,sans-serif;overflow:hidden}
+button{font:inherit;font-size:13px;cursor:pointer}
+#cv{position:fixed;inset:0;width:100%;height:100%;display:block;touch-action:none;cursor:grab}
+/* thanh trên */
+#top{position:fixed;left:0;right:0;top:0;height:42px;display:flex;align-items:center;justify-content:space-between;padding:0 10px;background:rgba(10,18,28,.92);border-bottom:1px solid var(--ln);z-index:7;gap:8px}
+#top .ttl{font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0;font-size:14px}
+#top .grp{display:flex;gap:6px;align-items:center;flex-shrink:0}
+#top input{background:#08111b;border:1px solid var(--ln);color:#fff;border-radius:8px;padding:4px 8px;width:140px;font-size:13px}
+.sc{background:var(--p2);border:1px solid var(--ln);padding:2px 10px;border-radius:16px;white-space:nowrap;font-size:12.5px}.sc b{color:var(--ac)}
+.tg{background:var(--p2);border:1px solid var(--ln);color:var(--mu);border-radius:8px;padding:4px 9px;font-size:12.5px;white-space:nowrap}
+.tg.on{border-color:var(--ac);color:var(--ac)}.tg:hover{border-color:var(--ac)}
+/* bảng hai bên */
+.pn{position:fixed;background:rgba(19,32,47,.94);border:1px solid var(--ln);border-radius:12px;display:flex;flex-direction:column;min-height:0;z-index:5;transition:transform .25s,opacity .25s}
+.ph{display:flex;justify-content:space-between;align-items:center;padding:5px 6px 5px 10px;border-bottom:1px solid var(--ln);font-weight:700;font-size:13px;gap:6px}
+.ph button{padding:1px 8px}
+#lp{left:10px;top:50px;width:226px;max-height:calc(100vh - 124px)}
+#rp{right:10px;top:50px;width:310px;max-height:calc(100vh - 124px)}
+#lp.hid{transform:translateX(-120%);opacity:0;pointer-events:none}#rp.hid{transform:translateX(120%);opacity:0;pointer-events:none}
+.hdl{position:fixed;top:56px;z-index:6;display:none;background:rgba(19,32,47,.94);border:1px solid var(--ln);color:var(--ac);padding:8px 7px;font-size:15px}
+#hl{left:0;border-radius:0 10px 10px 0;border-left:0}#hr{right:0;border-radius:10px 0 0 10px;border-right:0}
+.body{overflow-y:auto;padding:7px 8px;min-height:0;flex:1}
+.stp{border:1px solid var(--ln);border-radius:8px;background:#101d2c;padding:5px 8px;margin-bottom:5px;display:flex;gap:7px;align-items:center;cursor:pointer;font-size:12.8px;line-height:1.3}
+.stp .si{width:20px;height:20px;border-radius:50%;border:1.5px solid var(--mu);display:grid;place-items:center;font-size:11px;flex:none;color:var(--mu)}
+.stp.done .si{background:var(--ok);border-color:var(--ok);color:#04231b}.stp.cur{border-color:var(--ac)}.stp.cur .si{border-color:var(--ac);color:var(--ac)}.stp.lock{opacity:.5}.stp.view{background:#16384a}
+.tabs{display:flex;border-bottom:1px solid var(--ln)}.tabs button{flex:1;background:none;border:0;color:var(--mu);padding:6px 2px;border-bottom:2px solid transparent;font-size:12.5px}
+.tabs button.on{color:var(--ac);border-bottom-color:var(--ac);font-weight:700}
+/* thẻ thuyết minh */
+#info{position:fixed;top:50px;left:calc(var(--lw) + (100vw - var(--lw) - var(--rw))/2);transform:translateX(-50%);width:min(540px,calc(100vw - var(--lw) - var(--rw) - 24px));min-width:240px;background:rgba(19,32,47,.94);border:1px solid var(--ln);border-radius:12px;z-index:5;font-size:12.8px;transition:left .25s,width .25s}
+#info.hid{display:none}
+#info .ih{display:flex;align-items:center;gap:6px;padding:4px 6px 4px 12px}
+#info .ih b{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:#fff}
+#info .ic{padding:1px 8px}
+#info .ib{padding:7px 12px 9px;max-height:28vh;overflow-y:auto;line-height:1.55;color:#c9d6e5;border-top:1px solid var(--ln)}
+#info.col .ib{display:none}
+.eq{margin:5px 0;padding:5px 8px;background:#08111b;border-radius:6px;font-family:Cambria,"Times New Roman",serif;font-size:13.5px;color:#ffe3a8}
+.tk{display:flex;gap:8px;align-items:center;padding:6px 8px;border:1px solid var(--ln);border-radius:8px;margin-bottom:5px;background:#101d2c;font-size:12.8px}
+.tk i{width:20px;height:20px;border-radius:50%;border:1.5px solid var(--mu);display:grid;place-items:center;font-style:normal;flex:none;font-size:11px}
+.tk.ok{border-color:var(--ok)}.tk.ok i{background:var(--ok);border-color:var(--ok);color:#04231b}
+.q{border:1px solid var(--ln);border-radius:10px;background:#101d2c;padding:8px;margin-bottom:8px}.q.okq{border-color:var(--ok)}.q.nq{border-color:var(--bd)}
+.qh{font-size:11.5px;margin-bottom:3px;color:var(--ac);font-weight:700}.qt{line-height:1.45;margin-bottom:5px;font-size:13px}
+.opt{display:block;width:100%;text-align:left;margin:3px 0;background:#0f1b2a;color:var(--tx);border:1px solid var(--ln);border-radius:8px;padding:5px 8px;line-height:1.35;font-size:12.8px}
+.opt:hover:not(:disabled){border-color:var(--ac)}.opt.ok{border-color:var(--ok);background:#12362a}.opt.bad{border-color:var(--bd);background:#3a1a1a}
+.ex{margin-top:5px;padding:5px 8px;border-radius:7px;font-size:12.3px;line-height:1.5}.ex.g{background:#12362a;color:#bdf0d3}.ex.r{background:#3a1c1c;color:#ffc9c9}
+.tfi{border:1px solid var(--ln);border-radius:8px;padding:6px 8px;margin:5px 0;background:#0f1b2a}.tfi.ok{border-color:var(--ok)}.tfi.bad{border-color:var(--bd)}
+.tft{line-height:1.4;margin-bottom:5px;font-size:12.8px}.tfb{display:flex;gap:6px}.tfb button{background:var(--p2);color:var(--tx);border:1px solid var(--ln);border-radius:6px;padding:3px 14px}
+.tfb button.sel{background:var(--ac);color:#03241b;border-color:var(--ac);font-weight:700}.tfb button:disabled{cursor:default}
+.tfc{margin-top:6px}.qh .ty{color:var(--mu);font-weight:400;margin-left:6px}
+.btn{background:var(--p2);color:var(--tx);border:1px solid var(--ln);border-radius:8px;padding:6px 11px}
+.btn:hover:not(:disabled){border-color:var(--ac)}.btn:disabled{opacity:.45;cursor:not-allowed}
+.btn.pri{background:var(--ac);border-color:var(--ac);color:#03241b;font-weight:700}.btn.warn{border-color:var(--a2);color:var(--a2)}.btn.on{border-color:var(--ac);color:var(--ac)}
+#ctrl{position:fixed;left:10px;right:10px;bottom:10px;min-height:46px;background:rgba(19,32,47,.94);border:1px solid var(--ln);border-radius:12px;padding:6px 10px;display:flex;flex-wrap:wrap;gap:6px;align-items:center;z-index:5}
+#ctrl .sp{flex:1}
+#eqb{position:fixed;left:50%;bottom:68px;transform:translateX(-50%);display:none;background:rgba(10,18,28,.94);border:1px solid var(--a2);border-radius:10px;padding:5px 14px;font-family:Cambria,"Times New Roman",serif;font-size:14px;color:#ffe3a8;z-index:5;text-align:center;line-height:1.55}
+#toast{position:fixed;left:50%;top:100px;transform:translateX(-50%);background:#0a121c;border:1px solid var(--a2);color:#ffe3a8;padding:7px 14px;border-radius:20px;opacity:0;transition:opacity .3s;pointer-events:none;font-size:13px;z-index:9}
+#nogl{position:fixed;left:20%;right:20%;top:45%;text-align:center;color:var(--a2);padding:12px;background:#0a121c;border:1px solid var(--ln);border-radius:10px;z-index:4}
+.rs input{background:#08111b;border:1px solid var(--ln);color:#fff;border-radius:8px;padding:6px 9px;width:100%;margin:4px 0 8px}
+.hi{border:1px solid var(--ln);border-radius:8px;padding:5px 8px;margin:5px 0;font-size:12.3px;background:#0f1b2a}
+pre{white-space:pre-wrap;background:#08111b;padding:8px;border-radius:8px;font-size:12.3px;margin:6px 0}
+@media(max-width:900px){#top input{width:100px}#top .ttl{display:none}#top{justify-content:flex-end}}
+</style></head>
+<body>
+<canvas id="cv"></canvas>
+<div id="top"><div class="ttl">Thí nghiệm 3D: Phản ứng của nhóm amine (methylamine)</div>
+<div class="grp"><input id="stu" placeholder="Họ tên học sinh" maxlength="40">
+<span class="sc" id="ckw" style="display:none"><b id="ck">0</b></span><span class="sc" id="mc" style="display:none"></span><span class="sc">Điểm <b id="sc">0</b>/<span id="mx">16</span></span>
+<button class="tg on" id="tgl" title="Ẩn/hiện bảng các bước">☰ Các bước</button><button class="tg on" id="tgi" title="Ẩn/hiện thuyết minh">ⓘ Thuyết minh</button><button class="tg on" id="tgr" title="Ẩn/hiện bảng học tập">📚 Học tập</button><button class="tg" id="tga" title="Ẩn hoặc khôi phục toàn bộ bảng">⛶ Toàn cảnh</button></div></div>
+<div id="lp" class="pn"><div class="ph"><span>Các bước</span><button class="btn" id="tl" title="Ẩn bảng">✕</button></div><div class="body" id="stl"></div></div>
+<div id="rp" class="pn"><div class="ph"><span>Học tập</span><button class="btn" id="tr" title="Ẩn bảng">✕</button></div>
+<div class="tabs"><button data-t="tk" class="on">Nhiệm vụ</button><button data-t="qz">Câu hỏi</button><button data-t="rs">Kết quả</button></div>
+<div class="body" id="rb"></div></div>
+<div id="info"><div class="ih"><b id="it"></b><button class="btn ic" id="ic" title="Thu gọn / mở rộng">▾</button><button class="btn ic" id="ix" title="Ẩn thuyết minh">✕</button></div><div class="ib" id="ibd"></div></div>
+<button class="hdl" id="hl" title="Hiện bảng các bước">☰</button><button class="hdl" id="hr" title="Hiện bảng học tập">📚</button>
+<div id="eqb"></div>
+<div id="ctrl"></div>
+<div id="toast"></div><div id="nogl" hidden></div>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script>
+'use strict';
+const $=id=>document.getElementById(id);
+const clamp=(x,a,b)=>Math.min(b,Math.max(a,x));
+const lerp=(a,b,t)=>a+(b-a)*t;
+const ease=t=>t<.5?2*t*t:1-Math.pow(-2*t+2,2)/2;
+const rnd=(a,b)=>a+Math.random()*(b-a);
+const fp=n=>String(Math.round(n*100)/100).replace('.',',');
+const KEY='ddhoa-methylamine-v1',HKEY='ddhoa-methylamine-hist',UKEY='ddhoa-methylamine-ui';
+let HAS3D=false,booted=false,tm=0,tab='tk',showL=true;
+
+const STEPS=[
+{t:'Chuẩn bị',d:'<b>Mục đích:</b> chứng minh methylamine (CH₃NH₂) có tính base yếu; quan sát 4 tính chất: với chất chỉ thị, với acid, với dung dịch muối và với Cu(OH)₂ (tạo phức).<br><b>Hoá chất (đều 0,1 M):</b> dung dịch methylamine, HCl, FeCl₃, CuSO₄; giấy pH hoặc quỳ tím, phenolphthalein.<br><b>Dụng cụ:</b> ống nghiệm, mặt kính đồng hồ, ống nhỏ giọt, giá ống nghiệm.<br><b>An toàn:</b> methylamine có mùi khai, độc, dễ bay hơi: làm nơi thoáng khí, đóng nắp lọ ngay sau khi dùng; đeo kính, găng tay, khẩu trang.',btn:'Đã chuẩn bị, đeo bảo hộ'},
+{t:'TN1: Với chất chỉ thị',d:'Nhỏ một giọt methylamine 0,1 M lên mẫu giấy quỳ tím và mẫu giấy pH đặt trên mặt kính đồng hồ. Quỳ tím chuyển từ tím sang xanh; giấy pH chuyển xanh tím, ứng với pH khoảng 11–12. Methylamine nhận H⁺ từ nước, tạo OH⁻ nên dung dịch có môi trường base.<div class="eq">CH₃NH₂ + H₂O ⇌ CH₃NH₃⁺ + OH⁻</div>',btn:''},
+{t:'TN2: Với dung dịch acid',d:'Cho 2 mL methylamine 0,1 M vào ống 1, thêm 1 giọt phenolphthalein: dung dịch hồng. Nhỏ từ từ 2 mL HCl 0,1 M: màu hồng nhạt dần rồi biến mất vì lượng HCl bằng lượng methylamine, môi trường không còn base.<div class="eq">CH₃NH₂ + HCl → CH₃NH₃Cl</div><i>Lỗi thường gặp: nếu màu hồng chưa mất thì có thể nhỏ HCl chưa đủ hoặc chưa lắc đều.</i>',btn:''},
+{t:'TN3: Với dung dịch muối FeCl₃',d:'Cho 1 mL FeCl₃ 0,1 M vào ống 2, rồi thêm khoảng 3 mL methylamine 0,1 M (đúng tỉ lệ 1 : 3). Xuất hiện kết tủa nâu đỏ Fe(OH)₃ vì methylamine tạo OH⁻ trong nước.<div class="eq">3CH₃NH₂ + 3H₂O + FeCl₃ → Fe(OH)₃↓ + 3CH₃NH₃Cl</div><i>Lỗi thường gặp: dung dịch quá loãng hoặc thiếu methylamine thì kết tủa không rõ.</i>',btn:''},
+{t:'TN4: Với Cu(OH)₂ (tạo phức)',d:'Cho 2 mL CuSO₄ 0,1 M vào ống 3, thêm từ từ methylamine và lắc đều. Lúc đầu có kết tủa xanh lam nhạt Cu(OH)₂; khi dư methylamine kết tủa tan, thu được dung dịch xanh lam thẫm.<div class="eq">Cu²⁺ + 2CH₃NH₂ + 2H₂O → Cu(OH)₂↓ + 2CH₃NH₃⁺</div><div class="eq">Cu(OH)₂ + 4CH₃NH₂ → [Cu(CH₃NH₂)₄]²⁺ + 2OH⁻</div>Theo hai phương trình, mỗi Cu²⁺ cần 2 + 4 = 6 phân tử methylamine, tức 2 mL CuSO₄ 0,1 M cần khoảng 12 mL methylamine 0,1 M để kết tủa tan hết (mô phỏng nhỏ 3 mL mỗi lần). Trong thực tế cần dư.<br><i>Lỗi thường gặp: kết tủa không tan là do methylamine chưa dư.</i>',btn:''},
+{t:'Cấu trúc phức [Cu(CH₃NH₂)₄]²⁺',d:'Camera chuyển sang cảnh phân tử, tự xoay chậm. Ion Cu²⁺ (màu đồng) nằm giữa, liên kết với 4 nguyên tử N của 4 phân tử methylamine, sắp xếp dạng vuông phẳng. Mỗi N dùng cặp electron tự do tạo liên kết cho–nhận với Cu²⁺ (nối màu vàng). Màu nguyên tử: C xám, N xanh dương, H trắng. Mô hình chỉ đơn giản hoá, không đúng tỉ lệ độ dài và góc liên kết.',btn:'Xem cấu trúc phức'},
+{t:'Giải thích và kết luận',d:'<b>Kết luận:</b> methylamine là base yếu: đổi màu chất chỉ thị, trung hoà acid, tạo hydroxide kết tủa với muối Fe(III).<br>Methylamine còn tạo phức với Cu²⁺ nhờ cặp electron tự do trên N, giống ammonia. Tính chất này giúp phân biệt với base thông thường như NaOH (NaOH không hoà tan Cu(OH)₂).<br>Nhóm –CH₃ đẩy electron nên methylamine có tính base mạnh hơn ammonia.',btn:'Hoàn thành thí nghiệm'}
+];
+const TASKS=[
+ {t:'Giấy quỳ tím chuyển từ tím sang xanh',k:'a'},
+ {t:'Phenolphthalein hoá hồng trong methylamine',k:'b'},
+ {t:'Nhỏ đủ HCl: màu hồng biến mất',k:'c'},
+ {t:'Thu kết tủa nâu đỏ Fe(OH)₃',k:'d'},
+ {t:'Quan sát kết tủa xanh lam Cu(OH)₂',k:'e'},
+ {t:'Kết tủa tan hết, dung dịch xanh lam thẫm',k:'f'},
+ {t:'Quan sát cấu trúc phức Cu²⁺–methylamine',k:'g'},
+ {t:'Hoàn thành giải thích và kết luận',k:'h'}
+];
+const QZ=[
+ {t:'mc',q:'Methylamine có đặc điểm nào cần lưu ý khi làm thí nghiệm?',o:['Mùi khai khó chịu, độc, dễ bay hơi: làm nơi thoáng khí, đóng nắp lọ ngay sau khi dùng.','Không mùi, không độc, có thể để hở lọ.','Không bay hơi nên làm ở đâu cũng được.','Chỉ độc khi đun nóng.'],a:0,x:'Methylamine độc, mùi khai và dễ bay hơi; cần thoáng khí và đồ bảo hộ.'},
+ {t:'mc',q:'Nhỏ một giọt methylamine 0,1 M lên giấy quỳ tím, màu giấy thay đổi thế nào?',o:['Từ tím sang xanh.','Từ tím sang đỏ.','Từ xanh sang tím.','Không đổi màu.'],a:0,x:'Methylamine là base yếu, tạo OH⁻ trong nước nên làm quỳ tím hoá xanh.'},
+ {t:'mc',q:'Vì sao dung dịch methylamine có môi trường base?',o:['Nhận H⁺ từ nước, tạo CH₃NH₃⁺ và OH⁻.','Nhường H⁺ cho nước, tạo H₃O⁺.','Phân li hoàn toàn thành CH₃⁺ và NH₂⁻.','Phản ứng với O₂ trong không khí.'],a:0,x:'CH₃NH₂ + H₂O ⇌ CH₃NH₃⁺ + OH⁻.'},
+ {t:'mc',q:'Giấy pH chuyển sang xanh tím khi nhỏ methylamine 0,1 M, ứng với pH khoảng:',o:['11–12','1–2','6–7','13–14'],a:0,x:'Base yếu nên pH khoảng 11–12, thấp hơn dung dịch NaOH 0,1 M (pH khoảng 13).'},
+ {t:'mc',q:'Nhỏ 1 giọt phenolphthalein vào dung dịch methylamine, dung dịch có màu:',o:['Hồng','Xanh','Vàng','Không màu'],a:0,x:'Phenolphthalein hoá hồng trong môi trường base.'},
+ {t:'mc',q:'Nhỏ HCl 0,1 M vào 2 mL methylamine 0,1 M (có phenolphthalein) đến đủ 2 mL thì màu hồng biến mất vì:',o:['Methylamine đã được trung hoà hết, môi trường không còn base.','HCl phân huỷ phenolphthalein.','Phenolphthalein bay hơi.','Methylamine bị oxi hoá.'],a:0,x:'Lượng HCl bằng lượng methylamine, tạo muối CH₃NH₃Cl nên không còn base.'},
+ {t:'mc',q:'Sản phẩm của phản ứng CH₃NH₂ + HCl là:',o:['CH₃NH₃Cl (methylammonium chloride)','CH₃Cl và NH₃','CH₃NH₂Cl₂','CH₄ và NH₄Cl'],a:0,x:'Methylamine nhận H⁺ từ HCl tạo muối CH₃NH₃Cl.'},
+ {t:'mc',q:'Cho methylamine vào dung dịch FeCl₃ thu được:',o:['Kết tủa nâu đỏ Fe(OH)₃.','Kết tủa trắng.','Dung dịch xanh lam thẫm.','Khí không màu.'],a:0,x:'OH⁻ do methylamine tạo ra kết hợp với Fe³⁺ thành Fe(OH)₃ nâu đỏ.'},
+ {t:'mc',q:'Theo phương trình 3CH₃NH₂ + 3H₂O + FeCl₃ → Fe(OH)₃↓ + 3CH₃NH₃Cl, 1 mL FeCl₃ 0,1 M cần bao nhiêu mL methylamine 0,1 M?',o:['3 mL','1 mL','2 mL','6 mL'],a:0,x:'Tỉ lệ mol 1 : 3 và cùng nồng độ nên thể tích methylamine gấp 3 lần.'},
+ {t:'mc',q:'Thêm dư methylamine vào ống chứa kết tủa Cu(OH)₂ xanh lam nhạt, hiện tượng là:',o:['Kết tủa tan, dung dịch xanh lam thẫm.','Kết tủa chuyển đen.','Kết tủa chuyển đỏ gạch.','Không đổi.'],a:0,x:'Cu(OH)₂ + 4CH₃NH₂ → [Cu(CH₃NH₂)₄]²⁺ + 2OH⁻.'},
+ {t:'mc',q:'Điểm khác giữa methylamine và NaOH khi tác dụng với Cu(OH)₂ là:',o:['Methylamine hoà tan Cu(OH)₂ tạo phức, NaOH không hoà tan.','Cả hai đều hoà tan Cu(OH)₂ như nhau.','NaOH hoà tan, methylamine không.','Cả hai đều không phản ứng.'],a:0,x:'Methylamine có cặp electron tự do trên N để tạo phức, giống ammonia.'},
+ {t:'mc',q:'Trong phức [Cu(CH₃NH₂)₄]²⁺, liên kết giữa Cu²⁺ và methylamine hình thành nhờ:',o:['Cặp electron tự do trên nguyên tử N (liên kết cho–nhận).','Cặp electron trên nguyên tử C.','Liên kết ion giữa Cu²⁺ và CH₃⁺.','Liên kết hydro với nước.'],a:0,x:'Nguyên tử N cho cặp electron tự do vào orbital trống của Cu²⁺.'}
+];
+(function(){const T=[2,0,3,1,2,0,3,1,2,0,1,3];QZ.forEach((q,i)=>{const t=T[i],a=q.a;if(a!==t){const x=q.o[a];q.o[a]=q.o[t];q.o[t]=x;q.a=t;}});})();
+QZ.push(
+{t:'tf',q:'Về tính base của methylamine và phản ứng với acid (TN1, TN2), chọn Đúng/Sai:',items:[
+ {t:'Methylamine là base yếu: CH₃NH₂ + H₂O ⇌ CH₃NH₃⁺ + OH⁻.',a:true,x:'Methylamine nhận H⁺ từ nước nên có tính base yếu.'},
+ {t:'Giấy quỳ tím chuyển từ xanh sang tím khi gặp methylamine.',a:false,x:'Quỳ tím chuyển từ tím sang xanh.'},
+ {t:'Khi lượng HCl bằng lượng methylamine, thu được muối CH₃NH₃Cl và phenolphthalein mất màu.',a:true,x:'Môi trường không còn base nên phenolphthalein hết hồng.'},
+ {t:'Phenolphthalein mất màu vì HCl phản ứng trực tiếp với phenolphthalein.',a:false,x:'HCl trung hoà methylamine; môi trường mất tính base nên chỉ thị mất màu.'}]},
+{t:'tf',q:'Về phản ứng của methylamine với FeCl₃ (TN3), chọn Đúng/Sai:',items:[
+ {t:'Kết tủa nâu đỏ thu được là Fe(OH)₃.',a:true,x:'Fe³⁺ + 3OH⁻ → Fe(OH)₃↓ nâu đỏ.'},
+ {t:'Phương trình: 3CH₃NH₂ + 3H₂O + FeCl₃ → Fe(OH)₃↓ + 3CH₃NH₃Cl.',a:true,x:'Methylamine tạo OH⁻ trong nước, kết hợp với Fe³⁺.'},
+ {t:'1 mL FeCl₃ 0,1 M phản ứng vừa đủ với 1 mL methylamine 0,1 M.',a:false,x:'Cần 3 mL methylamine 0,1 M (tỉ lệ mol 1 : 3).'},
+ {t:'Methylamine tạo OH⁻ trong nước nên kết tủa được ion Fe³⁺.',a:true,x:'Đây là tính chất của base yếu.'}]},
+{t:'tf',q:'Về phản ứng của methylamine với CuSO₄ (TN4), chọn Đúng/Sai:',items:[
+ {t:'Lúc đầu xuất hiện kết tủa xanh lam nhạt Cu(OH)₂.',a:true,x:'Cu²⁺ + 2CH₃NH₂ + 2H₂O → Cu(OH)₂↓ + 2CH₃NH₃⁺.'},
+ {t:'Cu(OH)₂ tan khi dư methylamine do tạo phức [Cu(CH₃NH₂)₄]²⁺.',a:true,x:'Phức tan trong nước, màu xanh lam thẫm.'},
+ {t:'Phản ứng tạo phức cho thấy nguyên tử N còn cặp electron tự do.',a:true,x:'Cặp electron tự do trên N tạo liên kết cho–nhận với Cu²⁺.'},
+ {t:'NaOH dư cũng hoà tan được Cu(OH)₂ ở nhiệt độ thường tương tự methylamine.',a:false,x:'NaOH không hoà tan Cu(OH)₂ theo cách này; đây là điểm phân biệt với methylamine.'}]},
+{t:'tf',q:'Về an toàn và so sánh tính chất, chọn Đúng/Sai:',items:[
+ {t:'Có thể dùng chung một ống nhỏ giọt cho tất cả các lọ hoá chất để tiết kiệm.',a:false,x:'Phải dùng ống nhỏ giọt riêng cho từng lọ để tránh lẫn hoá chất.'},
+ {t:'Kết tủa Cu(OH)₂ chỉ tan hết khi methylamine dư.',a:true,x:'Nếu methylamine chưa dư thì kết tủa không tan hết.'},
+ {t:'Methylamine có mùi khai, độc, nên làm ở nơi thoáng khí và đóng nắp lọ sau khi dùng.',a:true,x:'Methylamine độc và dễ bay hơi.'},
+ {t:'Do nhóm –CH₃ đẩy electron, methylamine có tính base mạnh hơn ammonia.',a:true,x:'Nhóm đẩy electron làm tăng mật độ electron trên N nên dễ nhận H⁺ hơn.'}]}
+);
+const TFPTS=[0,.1,.25,.5,1];
+let ST,QA=QZ.map(q=>q.t==='tf'?{vals:[-1,-1,-1,-1],done:false,pts:0}:{sel:-1});
+function newST(keep){return{step:0,done:STEPS.map(()=>false),view:0,tk:keep?keep.tk:{},stu:keep?keep.stu:'',tw:{},
+ a1:0,a2:0,t1m:0,t1p:0,t1h:0,t2f:0,t2m:0,t3c:0,t3m:0,shake:0,shIdx:-1,float:0,
+ mol:false,showH:true,spin:true,msg:'',eq:'',drop:null,anim:null};}
+ST=newST(null);
+function load(){try{const j=JSON.parse(localStorage.getItem(KEY)||'null');if(j){QA.forEach((d,i)=>{if(j.qa&&j.qa[i])Object.assign(d,j.qa[i]);});ST.stu=j.stu||'';ST.tk=j.tk||{};}}catch(e){}}
+function save(){try{localStorage.setItem(KEY,JSON.stringify({qa:QA,stu:ST.stu,tk:ST.tk}));}catch(e){}}
+const score=()=>QA.reduce((a,q,i)=>a+(QZ[i].t==='tf'?(q.pts||0):(q.sel===QZ[i].a?1:0)),0);
+
+let R,SC,CAM,cvs,dummy,macro,mol,VK=-1;
+const cc={th:.12,ph:1.3,r:16,tx:-.8,ty:2.2,tz:0},tg=Object.assign({},cc);
+const VIEWS=[{th:.12,ph:1.3,r:16,t:[-.8,2.2,0]},{th:0,ph:1.2,r:9.5,t:[0,2.2,0]}];
+const M=(c,o)=>new THREE.MeshStandardMaterial(Object.assign({color:c,roughness:.6},o||{}));
+const TR=.5,TH=4.2,TBY=.14,TXS=[1.1,2.4,3.7],BX=[-6.2,-4.8,-3.4,-2.0,-.6],BZ=-1.8,WG=[-4.6,1.7],PML=.2,NF=100;
+const BCOL=[0xdcecf7,0xe8f4fb,0xe6c84a,0x4fb0f0,0xf5d0e0],BOP=[.28,.28,.6,.7,.3];
+const BNAME=['Methylamine 0,1 M','HCl 0,1 M','FeCl₃ 0,1 M','CuSO₄ 0,1 M','Phenolphthalein'];
+const BLAB=['#9fd0ff','#9fd0ff','#e6c84a','#6ec6ff','#f5a0c0'];
+let TB=[],paperL,paperP,bottleL=[],pipG,pipL,pipLM,dropS;
+
+function rr(c,x,y,w,h,r){c.beginPath();c.moveTo(x+r,y);c.arcTo(x+w,y,x+w,y+h,r);c.arcTo(x+w,y+h,x,y+h,r);c.arcTo(x,y+h,x,y,r);c.arcTo(x,y,x+w,y,r);c.closePath();}
+function drawLabel(cv,text,col){const c=cv.getContext('2d'),lines=String(text).split('\n'),fs=34,font='600 '+fs+'px "Segoe UI",Arial,sans-serif';
+ c.font=font;let w=0;lines.forEach(l=>{w=Math.max(w,c.measureText(l).width);});
+ cv.width=Math.ceil(w+36);cv.height=Math.ceil(lines.length*fs*1.25+22);
+ c.font=font;c.fillStyle='rgba(10,18,28,.84)';rr(c,2,2,cv.width-4,cv.height-4,14);c.fill();c.strokeStyle=col||'#35c2a1';c.lineWidth=3;c.stroke();
+ c.fillStyle='#fff';c.textBaseline='middle';lines.forEach((l,k)=>c.fillText(l,18,11+fs*.625+k*fs*1.25));}
+function lab(g,text,x,y,z,col,sc){const cv=document.createElement('canvas');drawLabel(cv,text,col);const tex=new THREE.CanvasTexture(cv);
+ const sp=new THREE.Sprite(new THREE.SpriteMaterial({map:tex,depthTest:false,transparent:true}));sp.renderOrder=10;const k=sc||.0046;sp.scale.set(cv.width*k,cv.height*k,1);sp.position.set(x,y,z);g.add(sp);return sp;}
+function glassGeo(r,h){const pts=[];for(let i=0;i<=10;i++){const a=-Math.PI/2+i/10*Math.PI/2;pts.push(new THREE.Vector2(Math.max(.0001,r*Math.cos(a)),r+r*Math.sin(a)));}pts.push(new THREE.Vector2(r,h));return new THREE.LatheGeometry(pts,32);}
+function mkFlakes(n,color,em){const m=new THREE.InstancedMesh(new THREE.IcosahedronGeometry(.06,0),M(color,{roughness:.8,emissive:em||0}),n);m.frustumCulled=false;const a=[];
+ for(let i=0;i<n;i++)a.push({r:Math.sqrt(Math.random())*.36,th:Math.random()*6.283,s:.7+Math.random()*.9,rr:Math.random()*3,ph:Math.random()*6.28,lay:Math.random()*.16});
+ return{m,a,n};}
+
+function buildTube(x,flakeCol,flakeEm){
+ const g=new THREE.Group(),t={g};g.position.set(x,TBY,0);
+ g.add(new THREE.Mesh(glassGeo(TR,TH),M(0xcfe8ff,{transparent:true,opacity:.2,roughness:.05,side:THREE.DoubleSide,depthWrite:false})));
+ const rim=new THREE.Mesh(new THREE.TorusGeometry(TR,.03,8,32),M(0xe6f4ff,{transparent:true,opacity:.5,depthWrite:false}));rim.rotation.x=Math.PI/2;rim.position.y=TH;g.add(rim);
+ t.lm=M(0xcfe8ff,{transparent:true,opacity:.18,roughness:.1,depthWrite:false});const wr=TR-.04;
+ t.wBot=new THREE.Mesh(new THREE.SphereGeometry(wr,24,12,0,Math.PI*2,Math.PI/2,Math.PI/2),t.lm);t.wBot.position.y=TR;t.wBot.visible=false;g.add(t.wBot);
+ t.wCyl=new THREE.Mesh(new THREE.CylinderGeometry(wr,wr,1,32),t.lm);t.wCyl.visible=false;g.add(t.wCyl);
+ if(flakeCol!==null){t.fl=mkFlakes(NF,flakeCol,flakeEm);g.add(t.fl.m);}
+ return t;}
+function buildMacro(){
+ const g=new THREE.Group();
+ const table=new THREE.Mesh(new THREE.BoxGeometry(18,.3,6.5),M(0x8a6a44));table.position.set(-1.2,-.15,0);g.add(table);
+ // giá ống nghiệm trắng, 3 lỗ
+ const wh=M(0xf0f2f4,{roughness:.7}),xc=2.4,w=4.5;
+ const base=new THREE.Mesh(new THREE.BoxGeometry(w,.14,1.6),wh);base.position.set(xc,.07,0);g.add(base);
+ [-1,1].forEach(s=>{const p=new THREE.Mesh(new THREE.BoxGeometry(.12,2.7,1.6),wh);p.position.set(xc+s*(w/2-.06),1.42,0);g.add(p);});
+ const sh=new THREE.Shape();sh.moveTo(-w/2,-.8);sh.lineTo(w/2,-.8);sh.lineTo(w/2,.8);sh.lineTo(-w/2,.8);sh.lineTo(-w/2,-.8);
+ TXS.forEach(x=>{const h=new THREE.Path();h.absarc(x-xc,0,.62,0,Math.PI*2,true);sh.holes.push(h);});
+ const up=new THREE.Mesh(new THREE.ExtrudeGeometry(sh,{depth:.12,bevelEnabled:false}),wh);up.rotation.x=-Math.PI/2;up.position.set(xc,2.62,0);g.add(up);
+ TB=[buildTube(TXS[0],null),buildTube(TXS[1],0xa5391a,0x300a02),buildTube(TXS[2],0x5aa6e8,0x103050)];TB.forEach(t=>g.add(t.g));
+ // mặt kính đồng hồ + hai mẫu giấy
+ const dish=new THREE.Mesh(new THREE.SphereGeometry(2.2,32,8,0,Math.PI*2,0,.55),M(0xd9e6ef,{transparent:true,opacity:.35,roughness:.1,side:THREE.DoubleSide,depthWrite:false}));
+ dish.rotation.x=Math.PI;dish.position.set(WG[0],2.24,WG[1]);g.add(dish);
+ paperL=new THREE.Mesh(new THREE.BoxGeometry(.4,.03,1.05),M(0x8a5aa8,{roughness:.9}));paperL.position.set(WG[0]-.55,.14,WG[1]);g.add(paperL);
+ paperP=new THREE.Mesh(new THREE.BoxGeometry(.4,.03,1.05),M(0xbfd36a,{roughness:.9}));paperP.position.set(WG[0]+.55,.14,WG[1]);g.add(paperP);
+ // lọ hoá chất
+ const gl=M(0xd9e6ef,{transparent:true,opacity:.45,roughness:.1,depthWrite:false});
+ BX.forEach((x,i)=>{
+  const body=new THREE.Mesh(new THREE.CylinderGeometry(.55,.55,1.5,28,1,true),gl);body.position.set(x,.75,BZ);g.add(body);
+  const bot=new THREE.Mesh(new THREE.CircleGeometry(.55,28),gl);bot.rotation.x=-Math.PI/2;bot.position.set(x,.01,BZ);g.add(bot);
+  const sho=new THREE.Mesh(new THREE.CylinderGeometry(.23,.55,.35,28,1,true),gl);sho.position.set(x,1.67,BZ);g.add(sho);
+  const nk=new THREE.Mesh(new THREE.CylinderGeometry(.23,.23,.35,20,1,true),gl);nk.position.set(x,2.02,BZ);g.add(nk);
+  const lq=new THREE.Mesh(new THREE.CylinderGeometry(.51,.51,1.1,28),M(BCOL[i],{transparent:true,opacity:BOP[i],depthWrite:false}));lq.position.set(x,.58,BZ);g.add(lq);
+  bottleL.push(lab(g,BNAME[i],x,2.85,BZ+.2,BLAB[i],.0036));});
+ // ống nhỏ giọt (đầu nhọn là gốc toạ độ)
+ pipG=new THREE.Group();
+ const pg=new THREE.Mesh(new THREE.CylinderGeometry(.08,.035,1.6,14),M(0xe8f2fa,{transparent:true,opacity:.45,depthWrite:false}));pg.position.y=.8;pipG.add(pg);
+ const plg=new THREE.CylinderGeometry(.05,.028,1,14);plg.translate(0,.5,0);pipLM=M(0xcfe8ff,{transparent:true,opacity:.85});pipL=new THREE.Mesh(plg,pipLM);pipL.position.y=.04;pipL.scale.y=.01;pipG.add(pipL);
+ const bulb=new THREE.Mesh(new THREE.SphereGeometry(.2,16,12),M(0xc0392b,{roughness:.5}));bulb.position.y=1.8;bulb.scale.y=1.3;pipG.add(bulb);
+ pipG.position.set(-1.2,5.8,2.4);g.add(pipG);
+ dropS=new THREE.Mesh(new THREE.SphereGeometry(.07,10,10),M(0x4fb0f0,{transparent:true,opacity:.9}));dropS.visible=false;g.add(dropS);
+ g.userData.labs=[lab(g,'Mặt kính đồng hồ',WG[0],-.7,WG[1]+1.1,'#35c2a1',.0042),lab(g,'Giấy quỳ tím',WG[0]-.55,1.0,WG[1],'#b48ad8',.0036),lab(g,'Giấy pH',WG[0]+.55,1.0,WG[1],'#c8d86a',.0036)];
+ g.userData.tl=TXS.map((x,i)=>lab(g,'Ống '+(i+1),x,-.55,1.1,'#35c2a1',.0042));
+ return g;}
+function bondM(a,b,color,rad){const d=b.clone().sub(a),len=d.length();const m=new THREE.Mesh(new THREE.CylinderGeometry(rad,rad,len,8),M(color,{roughness:.5}));
+ m.position.copy(a.clone().add(b).multiplyScalar(.5));m.quaternion.setFromUnitVectors(new THREE.Vector3(0,1,0),d.normalize());return m;}
+function buildMol(){
+ const g=new THREE.Group(),hG=new THREE.Group();g.add(hG);g.userData.hG=hG;
+ const V=(x,y,z)=>new THREE.Vector3(x,y,z);
+ const atom=(p,r,c,grp)=>{const m=new THREE.Mesh(new THREE.SphereGeometry(r,18,14),M(c,{roughness:.4,metalness:.1}));m.position.copy(p);(grp||g).add(m);return m;};
+ const CC=0x8a8f95,CN=0x3a6fe0,CH=0xf5f5f5,CCU=0xd08a3a,CY=0xffd04a;
+ const cu=V(0,0,0);atom(cu,.46,CCU);
+ [V(1,0,0),V(0,0,1),V(-1,0,0),V(0,0,-1)].forEach(dir=>{
+  const perp=V(-dir.z,0,dir.x),n=dir.clone().multiplyScalar(1.4);atom(n,.3,CN);g.add(bondM(cu,n,CY,.055));
+  const c=n.clone().add(dir.clone().multiplyScalar(1.05));atom(c,.28,CC);g.add(bondM(n,c,CC,.05));
+  [1,-1].forEach(s=>{const h=n.clone().add(dir.clone().multiplyScalar(.3)).add(V(0,.62*s,0));atom(h,.14,CH,hG);hG.add(bondM(n,h,0xffffff,.03));});
+  [[V(0,.8,0),1],[V(0,-.4,0),.7],[V(0,-.4,0),-.7]].forEach(([dy,s])=>{const h=c.clone().add(dir.clone().multiplyScalar(.4)).add(dy).add(perp.clone().multiplyScalar(dy.y===.8?0:s));atom(h,.14,CH,hG);hG.add(bondM(c,h,0xffffff,.03));});
+ });
+ lab(g,'Cu²⁺',0,1.0,0,'#e0a060',.0046);
+ lab(g,'Liên kết cho–nhận\nN → Cu²⁺',1.6,1.3,1.6,'#ffd04a',.0040);
+ lab(g,'CH₃NH₂ (4 phân tử)',0,-1.5,1.5,'#9fc4ff',.0042);
+ lab(g,'[Cu(CH₃NH₂)₄]²⁺',0,2.0,0,'#6ec6ff',.0046);
+ return g;}
+
+const HOME=[-1.2,5.8,2.4];
+const CP1=new THREE.Color(0x8a5aa8),CP2=new THREE.Color(0x2b6fe0),CQ1=new THREE.Color(0xbfd36a),CQ2=new THREE.Color(0x4a5ac8);
+const C_CLEAR=new THREE.Color(0xcfe8ff),C_PINK=new THREE.Color(0xe0409a),C_FE=new THREE.Color(0xd9b44a),C_FE2=new THREE.Color(0xe3d7a8);
+const C_CU=new THREE.Color(0x7ab8ee),C_CU2=new THREE.Color(0xa9cdf0),C_DEEP=new THREE.Color(0x1b3fc4),CT=new THREE.Color();
+const tw=(k,to,dur,cb)=>{ST.tw[k]={from:ST[k],to,t:0,dur,cb};};
+function stepTw(dt){for(const k in ST.tw){const o=ST.tw[k];o.t+=dt;const u=clamp(o.t/o.dur,0,1);ST[k]=lerp(o.from,o.to,u);if(u>=1){const cb=o.cb;delete ST.tw[k];if(cb)cb();}}}
+const busy=()=>!!ST.anim||!!ST.drop||Object.keys(ST.tw).length>0;
+const vol=i=>i===0?ST.t1m+ST.t1h:i===1?ST.t2f+ST.t2m:ST.t3c+ST.t3m;
+const lvl=i=>Math.min(2.9,.2*vol(i));
+const surf=i=>TBY+TR+lvl(i);
+const lp=(a,b,t)=>[lerp(a[0],b[0],t),lerp(a[1],b[1],t),lerp(a[2],b[2],t)];
+function startPip(b,tgt,dur,mode,onPour,cb){ST.anim={b,tgt,u:0,dur,poured:false,mode,onPour,cb};}
+function updPip(dt){
+ const A=ST.anim;pipG.visible=true;let pos=HOME,fill=0,pouring=false;
+ if(A){A.u=Math.min(1,A.u+dt/A.dur);const u=A.u,x=BX[A.b],T=A.tgt;
+  const above=[x,3.9,BZ],dip=[x,1.55,BZ],over=[T.x,T.y,T.z];
+  if(u<.14)pos=lp(HOME,above,ease(u/.14));
+  else if(u<.30){pos=lp(above,dip,ease((u-.14)/.16));fill=clamp((u-.2)/.1,0,1)*1.2;}
+  else if(u<.42){pos=lp(dip,above,ease((u-.30)/.12));fill=1.2;}
+  else if(u<.62){pos=lp(above,over,ease((u-.42)/.2));fill=1.2;}
+  else if(u<.86){pos=over;pouring=true;const f=(u-.62)/.24;fill=1.2*(1-f*(A.mode==='drop'?.12:1));
+   if(!A.poured){A.poured=true;A.onPour&&A.onPour();}}
+  else{pos=lp(over,HOME,ease((u-.86)/.14));fill=A.mode==='drop'?1.05:0;}
+  pipLM.color.setHex(BCOL[A.b]);pipLM.opacity=A.b===3?.95:.8;
+  if(u>=1){const cb=A.cb;ST.anim=null;if(cb)cb();}
+ }
+ pipG.position.set(pos[0],pos[1],pos[2]);pipL.scale.y=Math.max(.01,fill);
+ if(ST.drop){const D=ST.drop;D.t+=dt/.55;const t=clamp(D.t,0,1);dropS.visible=true;dropS.material.color.setHex(D.col);dropS.position.set(D.x,lerp(D.y0,D.ly(),t*t),D.z);
+  if(D.t>=1){ST.drop=null;dropS.visible=false;D.land&&D.land();}}
+ else if(pouring&&A&&A.mode==='flow'){const T=A.tgt;dropS.visible=true;dropS.material.color.setHex(BCOL[A.b]);dropS.position.set(T.x,lerp(T.y-.35,T.ly(),(tm*3.2)%1),T.z);}
+ else dropS.visible=false;
+}
+function tubeTgt(i){return{x:TXS[i],z:0,y:5.1,ly:()=>surf(i)};}
+const paperTgtQ={x:WG[0]-.55,z:WG[1],y:2.4,ly:()=>.2},paperTgtP={x:WG[0]+.55,z:WG[1],y:2.4,ly:()=>.2};
+function pourFlow(b,i,onPour,cb){startPip(b,tubeTgt(i),5.4,'flow',()=>{ST.shIdx=i;ST.float=1;onPour();},cb);}
+function pourDrop(b,tgt,land,cb,y0){startPip(b,tgt,3.8,'drop',()=>{ST.drop={t:0,x:tgt.x,z:tgt.z,y0:tgt.y-.35,ly:tgt.ly,col:BCOL[b],land};},cb);}
+
+function updTube(dt){
+ const sh=ST.shake;
+ for(let i=0;i<3;i++){const t=TB[i],v=vol(i),act=(ST.shIdx===i);
+  const jit=act?sh:0;t.g.position.set(TXS[i]+Math.sin(tm*43)*.045*jit,TBY,0);t.g.rotation.z=Math.sin(tm*37)*.03*jit;
+  const has=v>.02;t.wBot.visible=t.wCyl.visible=has;const hc=Math.max(.001,lvl(i));t.wCyl.scale.y=hc;t.wCyl.position.y=TR+hc/2;
+  let op=.18;CT.copy(C_CLEAR);
+  if(i===0){const pk=ST.t1p>0?clamp((ST.t1m-ST.t1h)/2,0,1)*ST.t1p:0;CT.lerp(C_PINK,pk);op=.18+.32*pk;}
+  else if(i===1){const p2=clamp(ST.t2m/3,0,1);CT.copy(C_FE).lerp(C_FE2,p2*.7);op=lerp(.4,.2,p2);}
+  else{const pc=clamp(ST.t3m/4,0,1),cx=clamp((ST.t3m-4)/8,0,1);CT.copy(C_CU).lerp(C_CU2,pc*.4).lerp(C_DEEP,cx);op=lerp(.3,.62,cx);}
+  t.lm.color.copy(CT);t.lm.opacity=op;
+  if(t.fl){let ppt=0;if(i===1)ppt=clamp(ST.t2m/3,0,1);else{const cx=clamp((ST.t3m-4)/8,0,1);ppt=clamp(ST.t3m/4,0,1)*(1-cx);}
+   const top=Math.max(.3,TR+hc-.12),agi=act?Math.max(ST.float,sh):0,F=t.fl;
+   for(let k=0;k<F.n;k++){const a=F.a[k],thr=k/F.n;const s=clamp((ppt-thr)*8,0,1)*a.s;
+    const yy=.17+a.lay+agi*(.25+.8*Math.abs(Math.sin(a.ph+tm*(.6+1.8*agi)))*(top-.5)*.9);
+    dummy.position.set(Math.cos(a.th+tm*agi*1.2)*a.r,Math.min(top,yy),Math.sin(a.th+tm*agi*1.2)*a.r);dummy.rotation.set(a.rr+tm*agi,a.rr*2,0);dummy.scale.setScalar(Math.max(1e-4,s));dummy.updateMatrix();F.m.setMatrixAt(k,dummy.matrix);}
+   F.m.instanceMatrix.needsUpdate=true;}
+ }
+ paperL.material.color.copy(CP1).lerp(CP2,clamp(ST.a1,0,1));paperP.material.color.copy(CQ1).lerp(CQ2,clamp(ST.a2,0,1));
+}
+function updMol(dt){mol.userData.hG.visible=ST.showH;if(ST.spin)mol.rotation.y+=dt*.35;}
+function updMacro(dt){stepTw(dt);if(ST.shake>0&&!ST.tw.shake)ST.shake=Math.max(0,ST.shake-dt*.8);ST.float=Math.max(0,ST.float-dt*.3);updPip(dt);updTube(dt);}
+
+// ---- thao tác ----
+function setTask(k){if(!ST.tk[k]){ST.tk[k]=true;save();renderRight();}}
+function mark(i){ST.done[i]=true;if(ST.step===i&&i<STEPS.length-1)ST.step=i+1;ST.view=ST.step;renderLeft();renderCtrl();renderRight();}
+const r0=x=>Math.round(x);
+function nextAct(){const i=ST.step;
+ if(i===0)return{label:STEPS[0].btn,fn:()=>mark(0)};
+ if(i===1)return{label:'Nhỏ 1 giọt methylamine lên quỳ tím và giấy pH',fn:actPaper};
+ if(i===2){if(ST.t1m<1.99)return{label:'Cho 2 mL methylamine vào ống 1',fn:()=>actMA1()};
+  if(ST.t1p<.5)return{label:'Nhỏ 1 giọt phenolphthalein',fn:actPhen};
+  return{label:'Nhỏ 1 mL HCl 0,1 M',fn:actHCl};}
+ if(i===3){if(ST.t2f<.99)return{label:'Cho 1 mL FeCl₃ vào ống 2',fn:actFe};return{label:'Thêm 1 mL methylamine',fn:actMA2};}
+ if(i===4){if(ST.t3c<1.99)return{label:'Cho 2 mL CuSO₄ vào ống 3',fn:actCu};return{label:'Thêm 3 mL methylamine',fn:actMA3};}
+ if(i===5)return{label:STEPS[5].btn,fn:()=>{ST.mol=true;mark(5);ST.view=5;setTask('g');setView(1);renderLeft();renderCtrl();ST.msg='Mỗi N dùng cặp electron tự do tạo liên kết cho–nhận với Cu²⁺.';}};
+ if(i===6)return{label:STEPS[6].btn,fn:()=>{ST.mol=false;mark(6);setTask('h');setView(0);}};
+ return null;}
+function actPaper(){ST.eq='CH₃NH₂ + H₂O ⇌ CH₃NH₃⁺ + OH⁻';ST.msg='Nhỏ methylamine lên giấy quỳ tím.';
+ pourDrop(0,paperTgtQ,()=>{tw('a1',1,1.2,null);},()=>{
+  ST.msg='Nhỏ tiếp lên giấy pH.';pourDrop(0,paperTgtP,()=>{tw('a2',1,1.2,()=>{ST.msg='Quỳ tím tím → xanh; giấy pH xanh tím (pH khoảng 11–12): dung dịch có tính base.';setTask('a');mark(1);});},()=>{renderCtrl();});});}
+function actMA1(){ST.msg='Cho 2 mL methylamine vào ống 1.';pourFlow(0,0,()=>{tw('t1m',2,1.6,null);},()=>{ST.msg='Ống 1 có 2 mL methylamine. Nhỏ 1 giọt phenolphthalein.';renderCtrl();});}
+function actPhen(){pourDrop(4,tubeTgt(0),()=>{tw('t1p',1,1.2,()=>{ST.msg='Dung dịch chuyển sang màu hồng: môi trường base.';setTask('b');renderCtrl();});},()=>{renderCtrl();});}
+function actHCl(){ST.eq='CH₃NH₂ + HCl → CH₃NH₃Cl';pourFlow(1,0,()=>{tw('t1h',r0(ST.t1h)+1,1.6,null);},()=>{
+  if(ST.t1h>=1.99){ST.msg='Đủ 2 mL HCl: màu hồng biến mất, môi trường không còn base.';setTask('c');mark(2);}
+  else{ST.msg='Màu hồng nhạt dần. Nhỏ tiếp HCl.';renderCtrl();}});}
+function actFe(){ST.msg='Cho 1 mL FeCl₃ vào ống 2.';pourFlow(2,1,()=>{tw('t2f',1,1.6,null);},()=>{ST.msg='Ống 2: dung dịch FeCl₃ màu vàng nâu. Thêm methylamine.';renderCtrl();});}
+function actMA2(){ST.eq='3CH₃NH₂ + 3H₂O + FeCl₃ → Fe(OH)₃↓ + 3CH₃NH₃Cl';pourFlow(0,1,()=>{tw('t2m',r0(ST.t2m)+1,1.6,null);},()=>{
+  if(ST.t2m>=2.99){ST.msg='Đủ 3 mL methylamine: kết tủa nâu đỏ Fe(OH)₃ (tỉ lệ 1 : 3).';setTask('d');mark(3);}
+  else{ST.msg='Kết tủa nâu đỏ Fe(OH)₃ xuất hiện dần, cần thêm methylamine.';renderCtrl();}});}
+function actCu(){ST.msg='Cho 2 mL CuSO₄ vào ống 3.';pourFlow(3,2,()=>{tw('t3c',2,1.6,null);},()=>{ST.msg='Ống 3: dung dịch CuSO₄ xanh lam nhạt. Thêm từ từ methylamine.';renderCtrl();});}
+function actMA3(){pourFlow(0,2,()=>{tw('t3m',r0(ST.t3m)+3,1.6,null);},()=>{
+  const m=ST.t3m;
+  if(m<5.99){ST.eq='Cu²⁺ + 2CH₃NH₂ + 2H₂O → Cu(OH)₂↓ + 2CH₃NH₃⁺';ST.msg='Xuất hiện kết tủa xanh lam nhạt Cu(OH)₂.';setTask('e');}
+  else{ST.eq='Cu(OH)₂ + 4CH₃NH₂ → [Cu(CH₃NH₂)₄]²⁺ + 2OH⁻';ST.msg=m>=11.99?'Kết tủa tan hết, dung dịch xanh lam thẫm: tạo phức [Cu(CH₃NH₂)₄]²⁺.':'Kết tủa đang tan dần, tiếp tục thêm methylamine.';}
+  if(m>=11.99){setTask('f');mark(4);}else renderCtrl();});}
+function shakeTube(){const i=ST.step-2;if(i<0||i>2||busy()||vol(i)<.02)return;ST.shIdx=i;ST.shake=1;tw('shake',0,1.6,null);ST.float=1;ST.msg='Lắc nhẹ ống nghiệm '+(i+1)+'.';}
+function setView(k){Object.assign(tg,{th:VIEWS[k].th,ph:VIEWS[k].ph,r:VIEWS[k].r,tx:VIEWS[k].t[0],ty:VIEWS[k].t[1],tz:VIEWS[k].t[2]});VK=k;}
+function resetExp(){const keep={tk:ST.tk,stu:ST.stu};ST=newST(keep);setView(0);renderLeft();renderCtrl();renderRight();}
+
+let toastT=0;
+function toast(m){const e=$('toast');e.textContent=m;e.style.opacity=1;clearTimeout(toastT);toastT=setTimeout(()=>{e.style.opacity=0;},3000);}
+function renderLeft(){
+ $('stl').innerHTML=STEPS.map((s,i)=>{const lock=i>ST.step,cur=i===ST.step&&!ST.done[i];return`<div class="stp${ST.done[i]?' done':''}${cur?' cur':''}${lock?' lock':''}${ST.view===i?' view':''}" data-i="${i}"><span class="si">${ST.done[i]?'✓':i+1}</span><span>${s.t}</span></div>`;}).join('');
+ const v=ST.view;$('it').textContent='Bước '+(v+1)+': '+STEPS[v].t;$('ibd').innerHTML=STEPS[v].d;}
+function goView(i){if(i>ST.step||busy())return;ST.view=i;const m=(i===5);ST.mol=m;setView(m?1:0);renderLeft();renderCtrl();}
+function renderCtrl(){const c=$('ctrl'),b=[],bz=busy()?'disabled':'';
+ if(!ST.mol){
+  const act=nextAct();
+  if(act)b.push(`<button class="btn pri" id="bgo" ${bz}>${act.label}</button>`);
+  if(ST.step===2&&ST.t1m>=1.99)b.push(`<span class="sc">HCl: <b>${r0(ST.t1h)}</b>/2 mL</span>`);
+  if(ST.step===3&&ST.t2f>=.99)b.push(`<span class="sc">Methylamine: <b>${r0(ST.t2m)}</b>/3 mL</span>`);
+  if(ST.step===4&&ST.t3c>=1.99)b.push(`<span class="sc">Methylamine: <b>${r0(ST.t3m)}</b> mL</span>`);
+  if(ST.step>=2&&ST.step<=4)b.push(`<button class="btn" id="bsh" ${bz}>Lắc ống</button>`);
+ }else{
+  b.push(`<button class="btn ${ST.showH?'on':''}" id="bh">Ẩn / hiện nguyên tử H</button><button class="btn ${ST.spin?'on':''}" id="bsp">Dừng / tiếp tục xoay</button>`);
+  if(ST.step>=6)b.push('<button class="btn pri" id="bgo">'+STEPS[6].btn+'</button>');
+  b.push('<button class="btn" id="bbk">⬅ Về bàn thí nghiệm</button>');}
+ b.push('<span class="sp"></span><span id="msgw" class="sc" style="max-width:34vw;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title=""></span><button class="btn" id="bcam">Camera</button><button class="btn on" id="blab">Nhãn</button><button class="btn" id="brs">↺ Làm lại</button>');
+ c.innerHTML=b.join('');
+ const g=(id,f)=>{const el=$(id);if(el)el.onclick=f;};
+ g('bgo',()=>{const a=nextAct();if(a&&!busy())a.fn();});
+ g('bsh',shakeTube);g('bh',()=>{ST.showH=!ST.showH;renderCtrl();});g('bsp',()=>{ST.spin=!ST.spin;renderCtrl();});
+ g('bbk',()=>{ST.mol=false;ST.view=Math.min(ST.step,6);setView(0);renderLeft();renderCtrl();});
+ g('bcam',()=>setView(ST.mol?1:0));g('blab',()=>{showL=!showL;$('blab').classList.toggle('on',showL);});
+ g('brs',()=>{if(!confirm('Làm lại thí nghiệm? Điểm câu hỏi và nhiệm vụ đã làm được giữ.'))return;resetExp();});}
+function qHTML(i){const q=QZ[i],a=QA[i];
+ if(q.t==='tf'){const d=a.done;
+  const head=`<div class="qh">Câu ${i+1} · 1 đ<span class="ty">Đúng / Sai (4 ý)</span>${d?' · '+fp(a.pts)+' đ':''}</div>`;
+  let b=`<div class="qt">${q.q}</div>`+q.items.map((it,j)=>{const v=a.vals[j];const cls=d?(((v===1)===it.a)?' ok':' bad'):'';
+   return`<div class="tfi${cls}"><div class="tft"><b>${'abcd'[j]})</b> ${it.t}</div><div class="tfb"><button class="${v===1?'sel':''}" data-q="${i}" data-j="${j}" data-v="1" ${d?'disabled':''}>Đúng</button><button class="${v===0?'sel':''}" data-q="${i}" data-j="${j}" data-v="0" ${d?'disabled':''}>Sai</button></div>${d?`<div class="ex ${cls.trim()==='ok'?'g':'r'}">${it.a?'Đúng':'Sai'} – ${it.x}</div>`:''}</div>`;}).join('');
+  if(!d)b+=`<button class="btn pri tfc" data-chk="${i}" ${a.vals.some(v=>v<0)?'disabled':''}>Chấm điểm</button>`;
+  return`<div class="q${d?(a.pts>=1?' okq':a.pts>0?'':' nq'):''}">${head}${b}</div>`;}
+ const d=a.sel>=0;
+ return`<div class="q${d?(a.sel===q.a?' okq':' nq'):''}"><div class="qh">Câu ${i+1} · 1 đ${d?' · '+(a.sel===q.a?'1':'0')+' đ':''}</div><div class="qt">${q.q}</div>`+q.o.map((o,k)=>`<button class="opt${d?(k===q.a?' ok':k===a.sel?' bad':''):''}" data-q="${i}" data-k="${k}" ${d?'disabled':''}>${'ABCD'[k]}. ${o}</button>`).join('')+(d?`<div class="ex ${a.sel===q.a?'g':'r'}">${a.sel===q.a?'✔ Chính xác. ':'✘ Chưa đúng. '}${q.x}</div>`:'')+'</div>';}
+function ansTF(i){const a=QA[i],q=QZ[i];if(a.done||a.vals.some(v=>v<0))return;let n=0;q.items.forEach((it,j)=>{if((a.vals[j]===1)===it.a)n++;});a.pts=TFPTS[n];a.done=true;save();renderRight();}
+
+function renderRight(){
+ document.querySelectorAll('.tabs button').forEach(b=>b.classList.toggle('on',b.dataset.t===tab));const rb=$('rb');
+ if(tab==='tk'){rb.innerHTML=TASKS.map(t=>`<div class="tk${ST.tk[t.k]?' ok':''}"><i>${ST.tk[t.k]?'✓':''}</i><span>${t.t}</span></div>`).join('')+`<div class="hi">Nhiệm vụ tự đánh dấu khi bạn hoàn thành. Đã làm: <b>${Object.keys(ST.tk).length}/${TASKS.length}</b>.</div>`;}
+ else if(tab==='qz'){const y=rb.scrollTop;rb.innerHTML=QZ.map((q,i)=>qHTML(i)).join('');rb.scrollTop=y;}
+ else{const h=histGet();rb.innerHTML=`<div class="rs"><label>Họ tên học sinh</label><input id="stu2" value="${ST.stu.replace(/"/g,'&quot;')}" placeholder="Nhập họ tên"></div><pre id="rtx">${resText()}</pre><button class="btn pri" id="cp">Sao chép kết quả</button> <button class="btn" id="sv">Lưu vào lịch sử</button><div style="margin-top:10px;color:var(--mu)">Lịch sử trên trình duyệt này:</div>`+(h.length?h.slice().reverse().map(x=>`<div class="hi">${x}</div>`).join(''):'<div class="hi">Chưa có.</div>')+(h.length?'<button class="btn warn" id="hc" style="margin-top:6px">Xoá lịch sử</button>':'');
+  const si=$('stu2');if(si)si.oninput=e=>{ST.stu=e.target.value;$('stu').value=ST.stu;save();$('rtx').textContent=resText();};
+  const cp=$('cp');if(cp)cp.onclick=()=>{try{navigator.clipboard.writeText(resText());toast('Đã sao chép kết quả.');}catch(e){toast('Hãy chọn và sao chép thủ công.');}};
+  const sv=$('sv');if(sv)sv.onclick=()=>{const h2=histGet();h2.push(new Date().toLocaleString('vi-VN')+' – '+(ST.stu||'(chưa nhập tên)')+': '+fp(score())+'/'+QZ.length+' điểm, '+Object.keys(ST.tk).length+'/'+TASKS.length+' nhiệm vụ');try{localStorage.setItem(HKEY,JSON.stringify(h2));}catch(e){}renderRight();toast('Đã lưu lịch sử.');};
+  const hc=$('hc');if(hc)hc.onclick=()=>{try{localStorage.removeItem(HKEY);}catch(e){}renderRight();};}
+ $('sc').textContent=fp(score());$('mx').textContent=QZ.length;}
+function histGet(){try{return JSON.parse(localStorage.getItem(HKEY)||'[]');}catch(e){return[];}}
+function resText(){let t='KẾT QUẢ: PHẢN ỨNG CỦA NHÓM AMINE (METHYLAMINE)\nHọc sinh: '+(ST.stu||'(chưa nhập)')+'\nNhiệm vụ: '+TASKS.filter(t=>ST.tk[t.k]).length+'/'+TASKS.length+'\nBước đã xong: '+ST.done.filter(Boolean).length+'/'+STEPS.length+'\n';
+ QZ.forEach((q,i)=>{const a=QA[i];t+='Câu '+(i+1)+(q.t==='tf'?' (đúng/sai)':'')+': '+(q.t==='tf'?(a.done?fp(a.pts)+' đ':'chưa làm'):(a.sel<0?'chưa làm':a.sel===q.a?'đúng':'sai'))+'\n';});return t+'TỔNG ĐIỂM: '+fp(score())+'/'+QZ.length;}
+function hud(){
+ const m=$('msgw');if(m){m.textContent=ST.msg||'';m.title=ST.msg||'';m.style.display=ST.msg?'inline-block':'none';}
+ const eb=$('eqb');if(ST.eq&&!ST.mol){eb.style.display='block';eb.textContent=ST.eq;}else eb.style.display='none';
+ $('mc').style.display='none';$('ckw').style.display='none';}
+let UI={l:true,i:true,r:true,col:false};
+function applyUI(){
+ $('lp').classList.toggle('hid',!UI.l);$('rp').classList.toggle('hid',!UI.r);$('info').classList.toggle('hid',!UI.i);$('info').classList.toggle('col',UI.col);
+ $('hl').style.display=UI.l?'none':'block';$('hr').style.display=UI.r?'none':'block';
+ $('tgl').classList.toggle('on',UI.l);$('tgr').classList.toggle('on',UI.r);$('tgi').classList.toggle('on',UI.i);$('ic').textContent=UI.col?'▸':'▾';
+ const narrow=innerWidth<900;document.documentElement.style.setProperty('--lw',(UI.l&&!narrow?246:0)+'px');document.documentElement.style.setProperty('--rw',(UI.r&&!narrow?330:0)+'px');
+ const any=UI.l||UI.r||UI.i;$('tga').classList.toggle('on',!any);$('tga').textContent=any?'⛶ Toàn cảnh':'⛶ Hiện lại';
+ try{localStorage.setItem(UKEY,JSON.stringify(UI));}catch(e){}}
+function init3D(){
+ cvs=$('cv');R=new THREE.WebGLRenderer({canvas:cvs,antialias:true});R.setPixelRatio(Math.min(window.devicePixelRatio||1,2));
+ SC=new THREE.Scene();SC.background=new THREE.Color(0x0d1520);CAM=new THREE.PerspectiveCamera(40,1,.1,200);dummy=new THREE.Object3D();
+ SC.add(new THREE.HemisphereLight(0xcfe4ff,0x1a2230,.95));const d1=new THREE.DirectionalLight(0xffffff,.85);d1.position.set(5,9,6);SC.add(d1);const d2=new THREE.DirectionalLight(0x9fc4ff,.35);d2.position.set(-6,4,-3);SC.add(d2);
+ macro=buildMacro();mol=buildMol();mol.position.set(0,2.2,0);mol.visible=false;SC.add(macro);SC.add(mol);
+ const pts=new Map();
+ cvs.addEventListener('pointerdown',e=>{cvs.setPointerCapture(e.pointerId);pts.set(e.pointerId,{x:e.clientX,y:e.clientY});});
+ cvs.addEventListener('pointerup',e=>pts.delete(e.pointerId));cvs.addEventListener('pointercancel',e=>pts.delete(e.pointerId));
+ cvs.addEventListener('pointermove',e=>{const p=pts.get(e.pointerId);if(!p)return;
+  if(pts.size===1){const dx=e.clientX-p.x,dy=e.clientY-p.y;if(ST.mol){mol.rotation.y+=dx*.01;mol.rotation.x=clamp(mol.rotation.x+dy*.008,-1.2,1.2);}else{tg.th-=dx*.008;tg.ph=clamp(tg.ph-dy*.008,.25,1.55);}}
+  else if(pts.size===2){const o=[...pts.entries()].find(([id])=>id!==e.pointerId)[1];const a0=Math.hypot(p.x-o.x,p.y-o.y),a1=Math.hypot(e.clientX-o.x,e.clientY-o.y);tg.r=clamp(tg.r*a0/Math.max(1,a1),4,26);}
+  p.x=e.clientX;p.y=e.clientY;});
+ cvs.addEventListener('wheel',e=>{e.preventDefault();tg.r=clamp(tg.r*(1+e.deltaY*.001),4,26);},{passive:false});
+ setView(0);}
+function frame(dt){
+ macro.visible=!ST.mol;mol.visible=ST.mol;
+ if(ST.mol)updMol(dt);else updMacro(dt);
+ const L=macro.userData.labs;if(L)L.forEach(s=>{s.visible=showL;});const TL=macro.userData.tl;if(TL)TL.forEach(s=>{s.visible=showL;});bottleL.forEach(s=>{s.visible=showL;});
+ const k=1-Math.exp(-6*dt);for(const q of ['th','ph','r','tx','ty','tz'])cc[q]+=(tg[q]-cc[q])*k;
+ const sp=Math.sin(cc.ph);CAM.position.set(cc.tx+cc.r*sp*Math.sin(cc.th),cc.ty+cc.r*Math.cos(cc.ph),cc.tz+cc.r*sp*Math.cos(cc.th));CAM.lookAt(cc.tx,cc.ty,cc.tz);
+ const w=cvs.clientWidth,h=cvs.clientHeight;if(w&&h&&(cvs.width!==Math.floor(w*R.getPixelRatio())||cvs.height!==Math.floor(h*R.getPixelRatio()))){R.setSize(w,h,false);CAM.aspect=w/h;CAM.updateProjectionMatrix();}
+ R.render(SC,CAM);}
+let last=0,lastHud=0;
+function loop(now){requestAnimationFrame(loop);const dt=Math.min(.05,(now-last)/1000||.016);last=now;tm+=dt;
+ if(HAS3D){try{frame(dt);}catch(e){console.error(e);HAS3D=false;$('nogl').hidden=false;$('nogl').textContent='Lỗi hiển thị 3D: '+e.message;}}
+ if(now-lastHud>150){lastHud=now;hud();}}
+function initUI(){load();$('stu').value=ST.stu;$('stu').oninput=e=>{ST.stu=e.target.value;save();if(tab==='rs'&&$('stu2')){$('stu2').value=ST.stu;$('rtx').textContent=resText();}};
+ renderLeft();renderCtrl();renderRight();
+ $('stl').onclick=e=>{const s=e.target.closest('.stp');if(s)goView(+s.dataset.i);};
+ document.querySelector('.tabs').onclick=e=>{const b=e.target.closest('button');if(!b)return;tab=b.dataset.t;renderRight();};
+ $('rb').onclick=e=>{const o=e.target.closest('.opt');if(o){if(o.disabled)return;QA[+o.dataset.q].sel=+o.dataset.k;save();renderRight();return;}
+  const t=e.target.closest('.tfb button');if(t){if(t.disabled)return;QA[+t.dataset.q].vals[+t.dataset.j]=+t.dataset.v;renderRight();return;}
+  const c=e.target.closest('.tfc');if(c&&!c.disabled)ansTF(+c.dataset.chk);};
+ try{const u=JSON.parse(localStorage.getItem(UKEY)||'null');if(u)Object.assign(UI,u);}catch(e){}
+ let saved=null;
+ $('tl').onclick=()=>{UI.l=false;applyUI();};$('hl').onclick=()=>{UI.l=true;applyUI();};$('tgl').onclick=()=>{UI.l=!UI.l;applyUI();};
+ $('tr').onclick=()=>{UI.r=false;applyUI();};$('hr').onclick=()=>{UI.r=true;applyUI();};$('tgr').onclick=()=>{UI.r=!UI.r;applyUI();};
+ $('tgi').onclick=()=>{UI.i=!UI.i;if(UI.i)UI.col=false;applyUI();};$('ix').onclick=()=>{UI.i=false;applyUI();};$('ic').onclick=()=>{UI.col=!UI.col;applyUI();};
+ $('tga').onclick=()=>{const any=UI.l||UI.r||UI.i;if(any){saved={l:UI.l,r:UI.r,i:UI.i};UI.l=UI.r=UI.i=false;}else{const sv=saved||{l:true,r:true,i:true};UI.l=sv.l;UI.r=sv.r;UI.i=sv.i;if(!(UI.l||UI.r||UI.i))UI.l=UI.r=UI.i=true;}applyUI();};
+ addEventListener('resize',applyUI);applyUI();}
+function boot(){if(booted)return;booted=true;HAS3D=(typeof THREE!=='undefined');
+ if(HAS3D){try{init3D();}catch(e){console.error(e);HAS3D=false;}}
+ if(!HAS3D){$('nogl').hidden=false;$('nogl').textContent='Không tải được Three.js hoặc WebGL (cần Internet). Phần bước, nhiệm vụ và câu hỏi vẫn dùng được.';}
+ initUI();requestAnimationFrame(loop);}
+window.addEventListener('load',()=>setTimeout(boot,50));
+</script><script type="module" src="https://static.cloudflareinsights.com/beacon.min.js/vce701823e78c4301a35b7e07294d87301792088814092" integrity="sha512-UKNk8GbxkABxKcXYuLkO16EleLGUkcvJWtpSNmExE0Too3ZaFAxTscNWEc1OdAv5/BikHawapSCaiD2XCmp+Bw==" data-cf-beacon='{"version":"2024.11.0","token":"32025ce925814db6adf135e23f853254","r":1,"spa":2}' crossorigin="anonymous"></script>
+</body></html>
